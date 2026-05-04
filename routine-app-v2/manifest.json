@@ -1,0 +1,20 @@
+{
+  "name": "My Routine • My Purpose",
+  "short_name": "My Routine",
+  "description": "Daily Islamic & Fitness Routine Tracker — Deen, Mind, Body",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#050e1a",
+  "background_color": "#050e1a",
+  "categories": ["lifestyle", "productivity", "health"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Prayers", "url": "./index.html", "description": "Mark today's prayers" },
+    { "name": "Habits", "url": "./index.html", "description": "Track daily habits" },
+    { "name": "Progress", "url": "./index.html", "description": "View your progress" }
+  ]
+}
