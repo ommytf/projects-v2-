@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#050e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Routine">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>My Routine • My Purpose</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="hidden">
+    <div class="ob-wrap">
+      <div class="ob-arabic">وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</div>
+      <div class="ob-title">MY ROUTINE <span>•</span> MY PURPOSE</div>
+      <div class="ob-step">
+        <div class="ob-field-label">Your Name</div>
+        <input class="ob-input" id="obName" type="text" placeholder="e.g. Omar" maxlength="30">
+        <div class="ob-field-label">Starting Weight (kg)</div>
+        <input class="ob-input" id="obWeight" type="number" placeholder="85" min="30" max="250" step="0.1">
+        <div class="ob-field-label">Goal Weight (kg)</div>
+        <input class="ob-input" id="obGoalW" type="number" placeholder="70" min="30" max="250" step="0.1">
+        <div class="ob-field-label">Your City</div>
+        <input class="ob-input" id="obCity" type="text" placeholder="Kerege, Pemba" maxlength="40">
+        <button class="ob-btn" onclick="finishOnboarding()">Begin My Journey ✦</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPLASH -->
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-arabic">وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</div>
+      <div class="splash-title">MY ROUTINE</div>
+      <div class="splash-dot">•</div>
+      <div class="splash-title">MY PURPOSE</div>
+      <div class="splash-name" id="splashName"></div>
+    </div>
+  </div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="topbar-btn" onclick="changeDay(-1)">&#8592;</button>
+    <div class="topbar-center" onclick="goToday()">
+      <div class="topbar-date" id="topbarDate"></div>
+      <div class="topbar-hijri" id="topbarHijri"></div>
+    </div>
+    <button class="topbar-btn" onclick="changeDay(1)">&#8594;</button>
+  </header>
+
+  <!-- LIVE CLOCK STRIP -->
+  <div class="clock-strip">
+    <div class="cs-clock" id="liveClock">00:00:00</div>
+    <div class="cs-divider"></div>
+    <div class="cs-prayer" id="nextPrayerStrip">Loading...</div>
+    <div class="cs-divider"></div>
+    <div class="cs-score">
+      <span class="cs-score-val" id="stripScore">0</span>
+      <span class="cs-score-lbl">Score</span>
+    </div>
+    <div class="cs-divider"></div>
+    <div class="cs-salah" id="stripSalah">0/5 🕌</div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- HOME -->
+    <section class="tab-panel active" id="tab-home">
+      <div class="home-greeting" id="homeGreeting"></div>
+      <div class="home-ayah" id="homeAyah"></div>
+      <div class="home-next-prayer card" id="homeNextPrayer"></div>
+      <div class="home-prayers-quick" id="homePrayersQuick"></div>
+      <div class="home-summary-grid" id="homeSummaryGrid"></div>
+      <div id="homeAchievements"></div>
+    </section>
+
+    <!-- PRAYERS -->
+    <section class="tab-panel" id="tab-prayers">
+      <div class="section-hdr"><span>🕌</span><span>Daily Prayers</span><span class="sh-hint">Tap to cycle: None → Prayed → Missed</span></div>
+      <div class="prayers-grid" id="prayersGrid"></div>
+      <div class="card mt10">
+        <div class="card-label">Qada (Prayers to make up)</div>
+        <div id="qadaGrid"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Prayer Notes <span class="edit-hint">editable</span></div>
+        <textarea class="textarea" id="prayerNotes" placeholder="Notes about today's prayers..." rows="3" oninput="debounceSave('journal',{prayer_notes:this.value})"></textarea>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="tab-panel" id="tab-schedule">
+      <div class="section-hdr"><span>⏰</span><span>Schedule</span><span class="sh-hint" id="schedNowLabel"></span></div>
+      <div class="timer-banner" id="timerBanner"></div>
+      <div class="timeline" id="timelineList"></div>
+    </section>
+
+    <!-- HABITS -->
+    <section class="tab-panel" id="tab-habits">
+      <div class="section-hdr"><span>✅</span><span>Habits</span><span class="sh-hint">Last 7 days — tap to toggle</span></div>
+      <div id="habitsContent"></div>
+    </section>
+
+    <!-- QURAN -->
+    <section class="tab-panel" id="tab-quran">
+      <div class="section-hdr"><span>📖</span><span>Qurʾān & Deen</span></div>
+      <div class="card">
+        <div class="card-label">Today's Recitation</div>
+        <div class="quran-row">
+          <div class="qfield"><div class="qf-lbl">Juzʾ</div><input class="s-input" id="quranJuz" type="number" min="1" max="30" placeholder="1-30" oninput="debounceSave('journal',{quran_juz:this.value})"></div>
+          <div class="qfield"><div class="qf-lbl">Pages</div><input class="s-input" id="quranPages" type="number" min="0" max="604" placeholder="0" oninput="debounceSave('journal',{quran_pages:parseInt(this.value)||0})"></div>
+          <div class="qfield" style="flex:2"><div class="qf-lbl">Surah</div><input class="s-input" id="quranSurah" type="text" placeholder="e.g. Al-Baqarah" oninput="debounceSave('journal',{quran_surah:this.value})" style="width:100%"></div>
+        </div>
+        <div id="quranKhatmBar" class="mt8"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Revision Log <button class="inline-btn" onclick="showRevisionAdd()">+ Add</button></div>
+        <div id="revisionList"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Weekly Deen Focus</div>
+        <div class="deen-week-grid" id="deenWeekGrid"></div>
+      </div>
+    </section>
+
+    <!-- FITNESS -->
+    <section class="tab-panel" id="tab-fitness">
+      <div class="section-hdr"><span>💪</span><span>Fitness</span></div>
+      <div class="card">
+        <div class="card-label">Today's Workout</div>
+        <div class="workout-types" id="workoutTypes"></div>
+        <div class="card-label mt8">Exercises <button class="inline-btn" onclick="showExerciseAdd()">+ Add</button></div>
+        <div id="exerciseList"></div>
+        <textarea class="textarea mt8" id="workoutNotes" placeholder="Workout notes..." rows="2" oninput="debounceSave('journal',{workout_notes:this.value})"></textarea>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Meals</div>
+        <div id="mealLogger"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Weight & Body</div>
+        <div id="weightGoalBar"></div>
+        <div class="inline-form mt8">
+          <input type="number" id="weightInput" class="s-input" placeholder="kg" step="0.1" style="width:80px">
+          <input type="number" id="bellyInput" class="s-input" placeholder="belly cm" step="0.1" style="width:90px">
+          <button class="log-btn" onclick="logWeight()">Log</button>
+        </div>
+        <div id="weightLog" class="mt8"></div>
+      </div>
+    </section>
+
+    <!-- STUDY -->
+    <section class="tab-panel" id="tab-study">
+      <div class="section-hdr"><span>🧠</span><span>Study & Mind</span></div>
+      <div class="card">
+        <div class="card-label">Pomodoro Timer</div>
+        <div id="pomodoroWidget"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Study Log <button class="inline-btn" onclick="showStudyAdd()">+ Add</button></div>
+        <div id="studyLogList"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Soft Skills</div>
+        <textarea class="textarea" id="softSkillNote" placeholder="What skill did you practise or learn today?" rows="3" oninput="debounceSave('journal',{soft_skill:this.value})"></textarea>
+      </div>
+    </section>
+
+    <!-- WRAPUP -->
+    <section class="tab-panel" id="tab-wrapup">
+      <div class="section-hdr"><span>📋</span><span>Daily Wrapup</span></div>
+      <div class="card"><div class="card-label">Did I follow my Deen today?</div>
+        <div class="btn-row"><button class="choice-btn" id="deenYes" onclick="setDeen('yes')">✔ Yes</button><button class="choice-btn" id="deenNo" onclick="setDeen('no')">✕ No</button></div></div>
+      <div class="card mt10"><div class="card-label">Study effectiveness (1–10)</div><div class="rate-grid" id="studyRateGrid"></div></div>
+      <div class="card mt10"><div class="card-label">Energy level (1–10)</div><div class="rate-grid" id="energyRateGrid"></div></div>
+      <div class="card mt10"><div class="card-label">What will I improve tomorrow?</div>
+        <textarea class="textarea" id="improveText" rows="2" placeholder="1 specific thing..." oninput="debounceSave('journal',{improve:this.value})"></textarea></div>
+      <div class="card mt10"><div class="card-label">3 Things I'm Grateful For</div>
+        <input class="ob-input" id="grat1" placeholder="1." oninput="debounceSave('journal',{grat1:this.value})" style="margin-bottom:6px">
+        <input class="ob-input" id="grat2" placeholder="2." oninput="debounceSave('journal',{grat2:this.value})" style="margin-bottom:6px">
+        <input class="ob-input" id="grat3" placeholder="3." oninput="debounceSave('journal',{grat3:this.value})"></div>
+      <div class="card mt10"><div class="card-label">Journal / Reflection</div>
+        <textarea class="textarea" id="journalText" rows="6" placeholder="Thoughts, reflections, what happened today..." oninput="debounceSave('journal',{journal:this.value})"></textarea></div>
+      <button class="save-btn" onclick="forceSaveAll()">✔ Save All</button>
+      <div class="saved-toast" id="savedToast">✔ Saved to database</div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="tab-panel" id="tab-progress">
+      <div class="section-hdr"><span>📊</span><span>Progress & Stats</span></div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="card mt10"><div class="card-label">30-Day Prayer Heatmap</div><div class="streak-dots" id="streakDots"></div></div>
+      <div class="card mt10"><div class="card-label">Weekly Scores</div><div id="weeklyChart"></div></div>
+      <div class="card mt10"><div class="card-label">Achievements 🏆</div><div id="achievementsGrid"></div></div>
+      <div class="card mt10"><div class="card-label">Weight History</div><div id="weightChart"></div></div>
+      <div class="card mt10">
+        <div class="card-label">Full History <span class="sh-hint">last 90 days</span></div>
+        <div id="historyTable"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="tab-panel" id="tab-settings">
+      <div class="section-hdr"><span>⚙️</span><span>Settings</span></div>
+      <div class="card">
+        <div class="card-label">Profile</div>
+        <div class="setting-row"><span>Name</span><input class="setting-input" id="sName" oninput="saveSetting('name',this.value)"></div>
+        <div class="setting-row"><span>City</span><input class="setting-input" id="sCity" oninput="saveSetting('city',this.value)"></div>
+        <div class="setting-row"><span>Start Weight</span><input class="setting-input" id="sStartW" type="number" oninput="saveSetting('start_weight',parseFloat(this.value))"></div>
+        <div class="setting-row"><span>Goal Weight</span><input class="setting-input" id="sGoalW" type="number" oninput="saveSetting('goal_weight',parseFloat(this.value))"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Prayer Times (editable)</div>
+        <div id="prayerTimesEdit"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Theme</div>
+        <div class="theme-btns">
+          <button class="theme-btn" id="th-dark" onclick="setTheme('dark')">Dark</button>
+          <button class="theme-btn" id="th-light" onclick="setTheme('light')">Light</button>
+          <button class="theme-btn" id="th-gold" onclick="setTheme('gold')">Gold</button>
+        </div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Notifications</div>
+        <div class="setting-row"><span>Prayer reminders</span><button class="toggle-btn" id="notifBtn" onclick="requestNotifs()">Enable</button></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label">Export & Backup</div>
+        <div class="export-btns">
+          <button class="export-btn" onclick="exportExcel()">📊 Excel Spreadsheet</button>
+          <button class="export-btn" onclick="exportJSON()">💾 JSON Backup</button>
+          <button class="export-btn" onclick="printPage()">🖨️ Print / PDF</button>
+        </div>
+        <div class="setting-row mt8"><span>Import backup</span><input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="font-size:11px;color:var(--txt2)"></div>
+      </div>
+      <div class="card mt10">
+        <div class="card-label" style="color:var(--red)">Danger Zone</div>
+        <button class="export-btn" style="border-color:var(--red);color:var(--red)" onclick="resetData()">Reset All Data</button>
+      </div>
+      <div class="footer-q mt10">
+        <div class="footer-arabic">رَبِّ زِدۡنِي عِلۡمًا</div>
+        <div class="footer-trans">"My Lord, increase me in knowledge." — Qurʾān 20:114</div>
+        <div class="footer-ver">My Routine v3.0 • Full-stack • One day at a time • With Allah</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('home')"><span class="ni">🏠</span><span class="nl">Home</span></button>
+    <button class="nav-btn" onclick="switchTab('prayers')"><span class="ni">🕌</span><span class="nl">Prayers</span></button>
+    <button class="nav-btn" onclick="switchTab('habits')"><span class="ni">✅</span><span class="nl">Habits</span></button>
+    <button class="nav-btn" onclick="switchTab('fitness')"><span class="ni">💪</span><span class="nl">Fitness</span></button>
+    <button class="nav-btn" onclick="switchTab('study')"><span class="ni">🧠</span><span class="nl">Study</span></button>
+    <button class="nav-btn" onclick="toggleMore()"><span class="ni">•••</span><span class="nl">More</span></button>
+  </nav>
+
+  <!-- MORE MENU -->
+  <div class="more-menu hidden" id="moreMenu">
+    <div class="more-overlay" onclick="toggleMore()"></div>
+    <div class="more-panel">
+      <div class="more-item" onclick="switchTab('schedule');toggleMore()">⏰ Schedule</div>
+      <div class="more-item" onclick="switchTab('quran');toggleMore()">📖 Qurʾān & Deen</div>
+      <div class="more-item" onclick="switchTab('wrapup');toggleMore()">📋 Daily Wrapup</div>
+      <div class="more-item" onclick="switchTab('progress');toggleMore()">📊 Progress</div>
+      <div class="more-item" onclick="switchTab('settings');toggleMore()">⚙️ Settings</div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal" id="modalBox">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-btns" id="modalBtns"></div>
+    </div>
+  </div>
+
+  <!-- POMODORO OVERLAY -->
+  <div class="pomo-overlay hidden" id="pomoOverlay">
+    <div class="pomo-modal">
+      <div class="pomo-phase" id="pomoPhaseLabel">Focus</div>
+      <div class="pomo-clock" id="pomoClockDisplay">25:00</div>
+      <div class="pomo-ring-wrap"><svg viewBox="0 0 100 100" class="pomo-ring"><circle cx="50" cy="50" r="45" fill="none" stroke="rgba(201,150,12,.15)" stroke-width="8"/><circle id="pomoRingFill" cx="50" cy="50" r="45" fill="none" stroke="#f0b429" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 50 50)"/></svg></div>
+      <div class="pomo-session" id="pomoSessionLabel">Session 1/4</div>
+      <div class="pomo-btns">
+        <button class="pomo-btn" id="pomoPauseBtn" onclick="pomoPause()">⏸</button>
+        <button class="pomo-btn" onclick="pomoSkip()">⏭</button>
+        <button class="pomo-btn" onclick="closePomo()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT AREA -->
+  <div id="printArea" class="print-only"></div>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
